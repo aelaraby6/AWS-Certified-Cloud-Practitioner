@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EC2 Security & Storage Quiz</title>
+<style>
+  :root{
+    --bg: #0d1321;
+    --panel: #131b2e;
+    --panel-2: #1a2338;
+    --line: #263252;
+    --text: #e7ecf7;
+    --muted: #8e9ac4;
+    --amber: #ffb454;
+    --amber-dim: #7a5a2a;
+    --good: #4fd1a5;
+    --bad: #ff6b6b;
+    --serif: "Georgia", "Times New Roman", serif;
+    --mono: "Consolas", "SFMono-Regular", Menlo, monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 15% -10%, #1c2947 0%, transparent 60%),
+      radial-gradient(900px 500px at 110% 10%, #17203a 0%, transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:32px 16px 60px;
+  }
+  .wrap{ width:100%; max-width:760px; }
+
+  .hero{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:16px;
+    padding-bottom:22px;
+    margin-bottom:26px;
+    border-bottom:1px solid var(--line);
+  }
+  .hero h1{
+    font-family:var(--serif);
+    font-size:clamp(26px,4.5vw,38px);
+    margin:0 0 6px;
+    line-height:1.15;
+  }
+  .hero p{
+    margin:0;
+    color:var(--muted);
+    font-size:14.5px;
+    max-width:46ch;
+  }
+  .node{
+    width:54px;height:54px;flex:0 0 auto;
+    border-radius:50%;
+    border:1px solid var(--amber-dim);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);
+    color:var(--amber);
+    font-size:11px;
+    position:relative;
+  }
+  .node::before{
+    content:"";
+    position:absolute; inset:-8px;
+    border-radius:50%;
+    border:1px dashed var(--amber-dim);
+    opacity:.5;
+  }
+
+  .card{
+    background: linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:28px 26px;
+    position:relative;
+    overflow:hidden;
+  }
+  .card::before{
+    content:"";
+    position:absolute; inset:0 0 auto 0; height:3px;
+    background:linear-gradient(90deg, var(--amber), transparent 70%);
+  }
+
+  #start-screen ul{
+    margin:18px 0 26px;
+    padding-inline-start:20px;
+    color:var(--muted);
+    font-size:14.5px;
+    line-height:2;
+  }
+  #start-screen li::marker{ color:var(--amber); }
+  .stat-row{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:22px; }
+  .stat{
+    flex:1 1 140px;
+    background:rgba(255,180,84,.06);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 14px;
+    text-align:center;
+  }
+  .stat b{ display:block; font-size:22px; font-family:var(--mono); color:var(--amber); }
+  .stat span{ font-size:12.5px; color:var(--muted); }
+
+  button{ font-family:inherit; cursor:pointer; border:none; }
+  .btn-primary{
+    background:var(--amber);
+    color:#241505;
+    font-weight:700;
+    font-size:15.5px;
+    padding:13px 26px;
+    border-radius:9px;
+    width:100%;
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .btn-primary:hover{ transform:translateY(-1px); box-shadow:0 8px 20px -8px rgba(255,180,84,.5); }
+  .btn-primary:disabled{ background:#3a3f4d; color:#767c8c; cursor:not-allowed; transform:none; box-shadow:none; }
+  .btn-ghost{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:12px 22px;
+    border-radius:9px;
+    font-size:14.5px;
+  }
+  .btn-ghost:hover{ border-color:var(--amber-dim); }
+
+  #quiz-screen{ display:none; }
+  .progress-row{ display:flex; align-items:center; gap:14px; margin-bottom:22px; }
+  .progress-track{ flex:1; height:6px; background:var(--line); border-radius:99px; overflow:hidden; }
+  .progress-fill{
+    height:100%; background:linear-gradient(90deg,var(--amber),#ffd699);
+    width:0%; transition:width .35s ease;
+  }
+  .progress-label{ font-family:var(--mono); font-size:13px; color:var(--muted); white-space:nowrap; }
+  .score-pill{
+    font-family:var(--mono); font-size:12.5px; color:var(--good);
+    border:1px solid var(--line); border-radius:99px; padding:4px 10px;
+    white-space:nowrap;
+  }
+
+  .q-eyebrow{ font-size:12.5px; color:var(--amber); font-family:var(--mono); margin-bottom:8px; }
+  #q-text{ font-size:19px; line-height:1.55; margin:0 0 22px; font-weight:600; }
+  .options{ display:flex; flex-direction:column; gap:10px; margin-bottom:8px; }
+  .opt{
+    text-align:left;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px 16px;
+    font-size:15px;
+    color:var(--text);
+    display:flex;
+    align-items:center;
+    gap:12px;
+    transition:border-color .12s ease, background .12s ease;
+  }
+  .opt:hover:not(:disabled){ border-color:var(--amber-dim); background:#1e2a45; }
+  .opt .tag{
+    flex:0 0 auto;
+    width:26px;height:26px;
+    border-radius:50%;
+    border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono); font-size:12.5px; color:var(--muted);
+  }
+  .opt.correct{ border-color:var(--good); background:rgba(79,209,165,.1); }
+  .opt.correct .tag{ border-color:var(--good); color:var(--good); }
+  .opt.wrong{ border-color:var(--bad); background:rgba(255,107,107,.1); }
+  .opt.wrong .tag{ border-color:var(--bad); color:var(--bad); }
+  .opt:disabled{ cursor:default; }
+
+  .explain{
+    display:none;
+    margin-top:16px;
+    padding:14px 16px;
+    border-radius:10px;
+    background:rgba(255,180,84,.06);
+    border:1px solid var(--amber-dim);
+    font-size:14px;
+    line-height:1.75;
+    color:#f1e6d3;
+  }
+  .explain b{ color:var(--amber); }
+
+  .nav-row{ display:flex; justify-content:flex-end; margin-top:22px; }
+  .nav-row button{ min-width:150px; }
+
+  #result-screen{ display:none; text-align:center; }
+  .ring{
+    width:150px; height:150px; margin:6px auto 20px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background: conic-gradient(var(--amber) calc(var(--pct,0)*1%), var(--line) 0);
+    position:relative;
+  }
+  .ring::before{ content:""; position:absolute; inset:10px; border-radius:50%; background:var(--panel); }
+  .ring span{ position:relative; font-family:var(--mono); font-size:30px; color:var(--amber); }
+  #result-title{ font-family:var(--serif); font-size:24px; margin:0 0 6px; }
+  #result-sub{ color:var(--muted); font-size:14.5px; margin:0 0 26px; }
+
+  .review-list{ text-align:left; margin-top:8px; display:flex; flex-direction:column; gap:10px; }
+  .review-item{ border:1px solid var(--line); border-radius:10px; padding:12px 14px; font-size:13.5px; line-height:1.7; }
+  .review-item.miss{ border-color:rgba(255,107,107,.4); }
+  .review-item .rq{ color:var(--text); font-weight:600; margin-bottom:4px; }
+  .review-item .ra{ color:var(--muted); }
+  .review-item .ra b{ color:var(--good); }
+  .review-item .ra .wrongtxt{ color:var(--bad); text-decoration:line-through; }
+
+  details{ margin-top:24px; text-align:left; }
+  summary{ cursor:pointer; color:var(--amber); font-size:14px; }
+
+  .result-actions{ display:flex; gap:10px; margin-top:26px; }
+  .result-actions button{ flex:1; }
+
+  @media (max-width:520px){
+    .card{ padding:22px 18px; }
+    .hero{ flex-direction:column-reverse; align-items:flex-start; }
+  }
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div>
+      <h1>EC2 Security & Storage Quiz</h1>
+      <p>25 questions covering Security Groups, EBS, AMI, Instance Store, EFS, and FSx.</p>
+    </div>
+    <div class="node">SEC</div>
+  </div>
+
+  <div class="card" id="start-screen">
+    <div class="stat-row">
+      <div class="stat"><b>25</b><span>Questions</span></div>
+      <div class="stat"><b id="stat-time">~15</b><span>Minutes (approx.)</span></div>
+      <div class="stat"><b>MCQ</b><span>Multiple choice</span></div>
+    </div>
+    <ul>
+      <li>You'll get instant feedback with a short explanation after each answer.</li>
+      <li>At the end you'll see your score percentage plus a full review of anything you missed.</li>
+      <li>You can retake the quiz anytime.</li>
+    </ul>
+    <button class="btn-primary" id="start-btn">Start Quiz</button>
+  </div>
+
+  <div class="card" id="quiz-screen">
+    <div class="progress-row">
+      <span class="score-pill" id="score-pill">Score: 0/0</span>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      <span class="progress-label" id="progress-label">1 / 25</span>
+    </div>
+
+    <div class="q-eyebrow" id="q-topic">General</div>
+    <p id="q-text"></p>
+    <div class="options" id="options"></div>
+    <div class="explain" id="explain"></div>
+
+    <div class="nav-row">
+      <button class="btn-primary" id="next-btn" disabled>Next</button>
+    </div>
+  </div>
+
+  <div class="card" id="result-screen">
+    <div class="ring" id="ring"><span id="ring-pct">0%</span></div>
+    <h2 id="result-title"></h2>
+    <p id="result-sub"></p>
+
+    <details>
+      <summary>Review all answers</summary>
+      <div class="review-list" id="review-list"></div>
+    </details>
+
+    <div class="result-actions">
+      <button class="btn-ghost" id="restart-btn">Retake Quiz</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const QUESTIONS = [
+  {
+    topic: "Security Groups",
+    q: "What do Security Group rules consist of?",
+    options: [
+      "Only deny rules",
+      "Both allow and deny rules",
+      "Only allow rules",
+      "Routing tables"
+    ],
+    correct: 2,
+    explain: "Security group rules are only allow rules. You cannot create an explicit deny rule in a security group, unlike NACLs which support both allow and deny."
+  },
+  {
+    topic: "Security Groups",
+    q: "How can a Security Group rule specify permissions?",
+    options: [
+      "Only by IP address",
+      "By IP address or by referencing another Security Group",
+      "Only by referencing an IAM Role",
+      "Only by MAC address"
+    ],
+    correct: 1,
+    explain: "Rules within Security Groups can specify permissions by IP address or by referencing other Security Groups."
+  },
+  {
+    topic: "Security Groups",
+    q: "A Security Group created in one VPC can be attached to an instance in:",
+    options: [
+      "Any VPC in the same account",
+      "Any VPC in the same Region",
+      "Only the same Region and VPC combination it was created in",
+      "Any VPC in any Region"
+    ],
+    correct: 2,
+    explain: "Security groups are restricted to a specific region and VPC combination. A security group created in one VPC cannot be attached to an instance in a different VPC."
+  },
+  {
+    topic: "Security Groups",
+    q: "What is the default inbound and outbound behavior of a new Security Group?",
+    options: [
+      "All inbound allowed, all outbound blocked",
+      "All inbound blocked, all outbound allowed",
+      "Both inbound and outbound blocked",
+      "Both inbound and outbound allowed"
+    ],
+    correct: 1,
+    explain: "By default, all inbound traffic is blocked, and by default, all outbound traffic is allowed."
+  },
+  {
+    topic: "Security Groups vs NACLs",
+    q: "You allow an inbound HTTP request on a Security Group with no matching outbound rule. What happens to the response traffic?",
+    options: [
+      "It's blocked because there's no outbound rule",
+      "It's automatically allowed out because Security Groups are stateful",
+      "It requires a manual outbound rule to be created",
+      "It depends on the NACL only"
+    ],
+    correct: 1,
+    explain: "Security groups are stateful: if you allow an inbound request, the response traffic is automatically allowed out, regardless of outbound rules. This is the key exam distinction from NACLs, which are stateless."
+  },
+  {
+    topic: "Troubleshooting",
+    q: "Your application times out and is not accessible. What's the most likely cause?",
+    options: [
+      "The application crashed",
+      "A DNS misconfiguration",
+      "A Security Group configuration issue (traffic silently dropped)",
+      "An AMI compatibility issue"
+    ],
+    correct: 2,
+    explain: "If your application times out and is not accessible, it's likely a security group configuration issue, since blocked traffic is silently dropped."
+  },
+  {
+    topic: "Troubleshooting",
+    q: "You get a 'connection refused' error instead of a timeout. What does this usually indicate?",
+    options: [
+      "The Security Group is blocking the port",
+      "The Security Group is likely fine — the application isn't running or isn't listening on that port",
+      "The VPC doesn't exist",
+      "The AMI is corrupted"
+    ],
+    correct: 1,
+    explain: "A 'connection refused' error usually means the security group is fine, and the issue is the application itself not running or not listening on that port."
+  },
+  {
+    topic: "EBS Volumes",
+    q: "What is an EBS Volume?",
+    options: [
+      "A physical drive permanently attached to one host",
+      "A network drive that can be attached to instances while they run",
+      "A managed NFS file system for many instances",
+      "A caching layer for Lambda functions"
+    ],
+    correct: 1,
+    explain: "An EBS Volume is a network drive that can be attached to instances while they run, allowing data to persist independently of the instance's lifecycle."
+  },
+  {
+    topic: "EBS Volumes",
+    q: "EBS volumes are bound to a specific:",
+    options: ["EC2 instance family", "Availability Zone", "AWS account", "Security Group"],
+    correct: 1,
+    explain: "EBS volumes are locked to an Availability Zone (AZ); a volume in us-east-1a cannot be attached to an instance in us-east-1b."
+  },
+  {
+    topic: "EBS Volumes",
+    q: "How do you move an EBS volume from one Availability Zone to another?",
+    options: [
+      "Simply detach and reattach it directly",
+      "Create a snapshot first, then restore it in the target AZ",
+      "It's not possible under any circumstances",
+      "Change the instance type"
+    ],
+    correct: 1,
+    explain: "To move a volume across AZs, you need to create a snapshot first, since EBS volumes are locked to their original AZ."
+  },
+  {
+    topic: "EBS Volumes",
+    q: "Which General Purpose SSD volume type is now the recommended default over the older gp2?",
+    options: ["io1", "io2", "gp3", "st1"],
+    correct: 2,
+    explain: "gp3 is now the recommended default General Purpose SSD volume type, decoupling IOPS/throughput from volume size so performance can be provisioned independently of capacity."
+  },
+  {
+    topic: "EBS Volumes",
+    q: "How is EBS billing calculated?",
+    options: [
+      "Based on actual data read/written only",
+      "Based on the provisioned capacity, regardless of usage",
+      "Based on the number of instances attached",
+      "EBS storage is always free"
+    ],
+    correct: 1,
+    explain: "EBS volumes have a provisioned capacity, measured in GBs and IOPS, and billing is based on the provisioned capacity, regardless of actual usage."
+  },
+  {
+    topic: "Delete on Termination",
+    q: "By default, what happens to the root EBS volume when an EC2 instance is terminated?",
+    options: [
+      "It is deleted (attribute enabled by default)",
+      "It is preserved (attribute disabled by default)",
+      "It is automatically archived",
+      "It is converted into a snapshot automatically"
+    ],
+    correct: 0,
+    explain: "By default, the root EBS volume is deleted when the instance terminates (the Delete on Termination attribute is enabled by default for the root volume)."
+  },
+  {
+    topic: "Delete on Termination",
+    q: "By default, what happens to any OTHER (non-root) attached EBS volume when an instance is terminated?",
+    options: [
+      "It is deleted along with the instance",
+      "It is not deleted (attribute disabled by default)",
+      "It is moved to another AZ automatically",
+      "It becomes read-only"
+    ],
+    correct: 1,
+    explain: "By default, any other attached EBS volume is not deleted when the instance terminates — only the root volume has Delete on Termination enabled by default."
+  },
+  {
+    topic: "EBS Snapshots",
+    q: "Do you need to detach an EBS volume before taking a snapshot?",
+    options: [
+      "Yes, it's mandatory",
+      "No, it's not necessary, but it's recommended for consistency",
+      "Yes, and the instance must also be terminated",
+      "Snapshots can only be taken from unattached volumes"
+    ],
+    correct: 1,
+    explain: "It's not necessary to detach the volume to take a snapshot, but it's recommended for consistency."
+  },
+  {
+    topic: "EBS Snapshots",
+    q: "What is the main benefit of the EBS Snapshot Archive tier?",
+    options: [
+      "Instant restoration with no extra fees",
+      "Up to 75% lower storage cost, best for snapshots rarely expected to be restored",
+      "Unlimited free retrieval at any time",
+      "Automatic conversion to an AMI"
+    ],
+    correct: 1,
+    explain: "The Archive tier offers up to 75% lower storage cost vs. standard, but restoring takes 24 to 72 hours, incurs a per-GB retrieval fee, and has a 90-day minimum retention period."
+  },
+  {
+    topic: "EBS Snapshots",
+    q: "What does the Recycle Bin for EBS Snapshots protect against?",
+    options: [
+      "Ransomware attacks on running instances",
+      "Accidental deletion of snapshots, allowing recovery within a set retention period",
+      "Slow snapshot creation times",
+      "Cross-region data transfer costs"
+    ],
+    correct: 1,
+    explain: "The Recycle Bin lets you set rules to retain deleted snapshots so you can recover them after an accidental deletion, with a retention period from 1 day up to 1 year."
+  },
+  {
+    topic: "AMI",
+    q: "What is an Amazon Machine Image (AMI)?",
+    options: [
+      "A network file system shared across instances",
+      "A pre-configured template used to launch an EC2 instance",
+      "A type of Security Group",
+      "A billing report for EC2 usage"
+    ],
+    correct: 1,
+    explain: "An AMI is a pre-configured template used to launch an EC2 instance — think of it as a 'snapshot' of a fully set-up server: OS, software, configuration, and monitoring agents all baked in."
+  },
+  {
+    topic: "AMI",
+    q: "An AMI is built for a specific Region. Can it be used to launch instances in other Regions?",
+    options: [
+      "No, it's permanently locked to its original Region",
+      "Yes, it can be copied to other Regions",
+      "Only if the instance type matches exactly",
+      "Only Public AMIs can be copied, never custom ones"
+    ],
+    correct: 1,
+    explain: "An AMI is built for (and tied to) a specific region, but can be copied to other regions when you need to launch identical instances elsewhere."
+  },
+  {
+    topic: "AMI",
+    q: "What is the correct order of steps to build a custom AMI?",
+    options: [
+      "Create AMI, launch instance, stop instance, configure",
+      "Launch and configure instance, stop instance, create AMI, launch new instances from it",
+      "Stop instance, launch instance, create AMI, configure",
+      "Terminate instance, create AMI, configure new instance"
+    ],
+    correct: 1,
+    explain: "The correct workflow is: launch and fully configure the instance, stop it first to ensure data consistency, create an AMI from the stopped instance (which also creates the underlying EBS snapshots), then launch new instances from that AMI."
+  },
+  {
+    topic: "EC2 Image Builder",
+    q: "How much does AWS charge for the EC2 Image Builder service itself?",
+    options: [
+      "A flat monthly fee",
+      "A per-AMI creation fee",
+      "It's a free service — you only pay for the underlying resources used",
+      "It charges based on the number of Regions used"
+    ],
+    correct: 2,
+    explain: "EC2 Image Builder is a free service, with charges only for the underlying resources used during the automated build, validation, and testing process."
+  },
+  {
+    topic: "Instance Store",
+    q: "What happens to data on an EC2 Instance Store volume if the instance is stopped or terminated?",
+    options: [
+      "Data is automatically backed up to S3",
+      "Data is lost — Instance Store is ephemeral",
+      "Data is copied to EBS automatically",
+      "Nothing happens, data persists indefinitely"
+    ],
+    correct: 1,
+    explain: "EC2 Instance Store volumes are ephemeral: they lose all data if the instance is stopped, hibernated, or terminated, though a simple reboot is safe."
+  },
+  {
+    topic: "Instance Store",
+    q: "Which scenario is a good fit for EC2 Instance Store?",
+    options: [
+      "A critical financial database that cannot lose any data",
+      "A Redis cache node or a Hadoop/Spark worker that recomputes data from a source of truth",
+      "The root volume of a production web server holding customer records",
+      "Long-term compliance backups"
+    ],
+    correct: 1,
+    explain: "Instance Store suits buffer, cache, scratch, or temporary content where losing the local disk is an inconvenience, not a disaster — like a Redis cache node or a Spark worker."
+  },
+  {
+    topic: "EFS",
+    q: "What is a key differentiator of Amazon EFS compared to EBS?",
+    options: [
+      "EFS can only be attached to one instance at a time",
+      "EFS can be mounted concurrently by instances across multiple Availability Zones in the same region",
+      "EFS is cheaper per GB than EBS gp3",
+      "EFS works natively with Windows instances only"
+    ],
+    correct: 1,
+    explain: "EFS can be mounted from instances across multiple Availability Zones in the same region simultaneously — the key differentiator from EBS, which is locked to one AZ. It works with Linux instances, not natively with Windows, and is generally more expensive per GB than EBS gp3."
+  },
+  {
+    topic: "EFS Storage Classes / FSx",
+    q: "A team is migrating an existing Windows application that requires a native SMB file share to AWS. Which service should they use?",
+    options: ["Amazon EFS", "FSx for Windows File Server", "EC2 Instance Store", "EFS Archive"],
+    correct: 1,
+    explain: "FSx for Windows File Server is a managed, Windows-native file system supporting the SMB protocol and Active Directory integration, ideal for lift-and-shift Windows applications expecting a native Windows file share."
+  }
+];
+
+let current = 0;
+let score = 0;
+let answers = [];
+
+const startScreen = document.getElementById('start-screen');
+const quizScreen = document.getElementById('quiz-screen');
+const resultScreen = document.getElementById('result-screen');
+const optionsEl = document.getElementById('options');
+const qText = document.getElementById('q-text');
+const qTopic = document.getElementById('q-topic');
+const explainEl = document.getElementById('explain');
+const nextBtn = document.getElementById('next-btn');
+const progressFill = document.getElementById('progress-fill');
+const progressLabel = document.getElementById('progress-label');
+const scorePill = document.getElementById('score-pill');
+
+document.getElementById('stat-time').textContent = '~' + Math.ceil(QUESTIONS.length * 0.6);
+
+document.getElementById('start-btn').addEventListener('click', () => {
+  startScreen.style.display = 'none';
+  quizScreen.style.display = 'block';
+  renderQuestion();
+});
+
+document.getElementById('restart-btn').addEventListener('click', () => {
+  current = 0; score = 0; answers = [];
+  resultScreen.style.display = 'none';
+  quizScreen.style.display = 'block';
+  renderQuestion();
+});
+
+function renderQuestion(){
+  const data = QUESTIONS[current];
+  qTopic.textContent = data.topic;
+  qText.textContent = (current + 1) + '. ' + data.q;
+  optionsEl.innerHTML = '';
+  explainEl.style.display = 'none';
+  explainEl.innerHTML = '';
+  nextBtn.disabled = true;
+  nextBtn.textContent = (current === QUESTIONS.length - 1) ? 'See Results' : 'Next';
+
+  const letters = ['A','B','C','D'];
+  data.options.forEach((optText, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt';
+    btn.innerHTML = '<span class="tag">' + letters[idx] + '</span><span>' + optText + '</span>';
+    btn.addEventListener('click', () => selectAnswer(idx));
+    optionsEl.appendChild(btn);
+  });
+
+  progressFill.style.width = ((current) / QUESTIONS.length * 100) + '%';
+  progressLabel.textContent = (current + 1) + ' / ' + QUESTIONS.length;
+  scorePill.textContent = 'Score: ' + score + '/' + current;
+}
+
+function selectAnswer(idx){
+  const data = QUESTIONS[current];
+  const optButtons = optionsEl.querySelectorAll('.opt');
+  const isCorrect = idx === data.correct;
+
+  optButtons.forEach((btn, i) => {
+    btn.disabled = true;
+    if(i === data.correct) btn.classList.add('correct');
+    if(i === idx && !isCorrect) btn.classList.add('wrong');
+  });
+
+  if(isCorrect) score++;
+
+  answers.push({
+    question: data.q,
+    chosenText: data.options[idx],
+    correctText: data.options[data.correct],
+    isCorrect: isCorrect,
+    explain: data.explain
+  });
+
+  explainEl.innerHTML = '<b>' + (isCorrect ? 'Correct' : 'Incorrect') + '</b><br>' + data.explain;
+  explainEl.style.display = 'block';
+  nextBtn.disabled = false;
+  scorePill.textContent = 'Score: ' + score + '/' + (current + 1);
+}
+
+nextBtn.addEventListener('click', () => {
+  current++;
+  if(current < QUESTIONS.length){
+    renderQuestion();
+  } else {
+    showResults();
+  }
+});
+
+function showResults(){
+  quizScreen.style.display = 'none';
+  resultScreen.style.display = 'block';
+
+  const pct = Math.round((score / QUESTIONS.length) * 100);
+  document.getElementById('ring').style.setProperty('--pct', pct);
+  document.getElementById('ring-pct').textContent = pct + '%';
+
+  let title, sub;
+  if(pct >= 85){ title = 'Excellent — Exam ready'; sub = 'Your knowledge of EC2 security and storage is strong. Review anything you missed below.'; }
+  else if(pct >= 60){ title = 'Good, but keep reviewing'; sub = "You've got the basics down. Focus on the areas you missed below."; }
+  else { title = 'Needs more study'; sub = 'Go back over the notes, especially Security Groups vs NACLs, and EBS vs Instance Store vs EFS.'; }
+
+  document.getElementById('result-title').textContent = title + ' — ' + score + '/' + QUESTIONS.length;
+  document.getElementById('result-sub').textContent = sub;
+
+  const reviewList = document.getElementById('review-list');
+  reviewList.innerHTML = '';
+  answers.forEach((a, i) => {
+    const div = document.createElement('div');
+    div.className = 'review-item' + (a.isCorrect ? '' : ' miss');
+    div.innerHTML =
+      '<div class="rq">' + (i+1) + '. ' + a.question + '</div>' +
+      '<div class="ra">' +
+        (a.isCorrect
+          ? 'Your answer: <b>' + a.chosenText + '</b>'
+          : 'Your answer: <span class="wrongtxt">' + a.chosenText + '</span> — Correct: <b>' + a.correctText + '</b>')
+      + '</div>';
+    reviewList.appendChild(div);
+  });
+}
+</script>
+</body>
+</html>
